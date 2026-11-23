@@ -337,7 +337,7 @@ class MainActivity : Activity() {
         if (expression.isBlank()) { responseView.text = roast("empty"); return }
         if (expression == lastExpression) repeatCount++ else { lastExpression = expression; repeatCount = 1 }
         if (repeatCount >= 2) {
-            responseView.text = roast("repeat").replace("N", repeatCount.toString())
+            responseView.text = roast("repeat").replace("#N", "#$repeatCount").replace("N TIMES", "$repeatCount TIMES")
             return
         }
         val s = expression.replace(" ", "")
