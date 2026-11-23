@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
+        android:icon="@drawable/ic_fun_calculate"
+        android:roundIcon="@drawable/ic_fun_calculate"
         android:allowBackup="false"
-        android:label="Calculator"
+        android:label="Fun Calculate"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:usesCleartextTraffic="false">
         <activity
