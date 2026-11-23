@@ -1,6 +1,7 @@
 package com.cyberpulse.calculator
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -19,6 +20,9 @@ class MainActivity : Activity() {
     private lateinit var expressionView: TextView
     private lateinit var responseView: TextView
     private lateinit var modeSpinner: Spinner
+    private lateinit var payPanel: LinearLayout
+    private lateinit var priceView: TextView
+    private lateinit var payButton: Button
     private var expression = ""
 
     private val modes = listOf("Normal", "Savage", "Unhinged", "Veterinarian")
@@ -126,6 +130,29 @@ class MainActivity : Activity() {
         }
         display.addView(expressionView, matchWrap())
         display.addView(responseView, matchWrap())
+
+        payPanel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), dp(12), dp(12), dp(4))
+            background = rounded(0xFF28203F.toInt(), 16, 0xFF8B65E8.toInt())
+            visibility = View.GONE
+        }
+        priceView = text("PAY TO GET THE ANSWER", 15f, Color.WHITE, true)
+        payPanel.addView(priceView, matchWrap())
+        payButton = Button(this).apply {
+            text = "PAY TO GET THE ANSWER"
+            isAllCaps = false
+            textSize = 13f
+            setTextColor(Color.WHITE)
+            background = rounded(0xFF8058E8.toInt(), 12)
+            setOnClickListener { showPaymentJoke() }
+        }
+        payPanel.addView(payButton, LinearLayout.LayoutParams(-1, dp(48)).apply {
+            topMargin = dp(8)
+        })
+        display.addView(payPanel, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(12)
+        })
         content.addView(display, matchWrap())
 
         val keys = listOf(
@@ -189,8 +216,12 @@ class MainActivity : Activity() {
             "AC" -> {
                 expression = ""
                 responseView.text = "Fresh start. Still not helping."
+                payPanel.visibility = View.GONE
             }
-            "DEL" -> expression = expression.dropLast(1)
+            "DEL" -> {
+                expression = expression.dropLast(1)
+                payPanel.visibility = View.GONE
+            }
             "=", "VIBE CHECK" -> roast()
             else -> {
                 if (expression.length < 48) expression += key
@@ -200,6 +231,7 @@ class MainActivity : Activity() {
     }
 
     private fun roast() {
+        payPanel.visibility = View.GONE
         if (expression.isBlank()) {
             responseView.text = "You gave me absolutely nothing. Impressive."
             return
@@ -240,6 +272,34 @@ class MainActivity : Activity() {
         }
 
         responseView.text = custom.random()
+
+        if (difficult && !hasDivisionByZero && !invalid) {
+            val price = (1_000 + operators * 7_500 + digits * 2_000 + compact.length * 1_000)
+                .coerceIn(1_000, 200_000)
+            priceView.text = "PAY TO GET THE ANSWER  •  R" + "%,d".format(price)
+            payButton.text = "PAY TO GET THE ANSWER"
+            payPanel.visibility = View.VISIBLE
+        }
+    }
+
+    private fun showPaymentJoke() {
+        AlertDialog.Builder(this)
+            .setTitle("WAIT... YOU'RE ACTUALLY PAYING?")
+            .setMessage("You're actually gonna pay for a calculator answer? You're so dumb.\n\nRelax. It's a joke. There is no payment and no answer behind this button.")
+            .setPositiveButton("I WAS ABOUT TO PAY") { _, _ ->
+                responseView.text = listOf(
+                    "LMAOOO YOU ALMOST PAID. I DON'T EVEN KNOW THE ANSWER.",
+                    "GOT YOU. KEEP YOUR MONEY AND USE YOUR BRAIN.",
+                    "Payment declined by the Department of Common Sense.",
+                    "You really thought I had a payment system? That's crazy."
+                ).random()
+                payPanel.visibility = View.GONE
+            }
+            .setNegativeButton("NEVER MIND") { _, _ ->
+                responseView.text = "Good choice. Your wallet has been spared."
+                payPanel.visibility = View.GONE
+            }
+            .show()
     }
 
     private fun text(value: String, size: Float, color: Int, bold: Boolean = false) =
