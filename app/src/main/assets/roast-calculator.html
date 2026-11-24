@@ -127,6 +127,9 @@ R.funcS.push("All those scientific keys and still no sign of common sense, dumba
 R.many.push("This expression needs a table of contents and a responsible adult.","Did you paste the entire exam paper in here?","Your equation is longer than the queue at the school office.","I'm a calculator, not an unpaid maths department.","This much maths should come with a warning label.","The brackets are multiplying like they pay rent.","I need a lunch break after reading that shit.","You have entered a mathematical crime scene.");
 R.manyS.push("Holy shit. Did you type the whole textbook, dumbass?","This equation is a mess and somehow you're the bigger one.","Take that algebraic nonsense and go bother a professor.");
 R.repeat.push("Again? You and this equals button are in a toxic relationship.","You pressed equals again. The answer is still unavailable, genius.","The button is tired of carrying your hopes.","Same input, same roast, same lack of progress.","You keep asking like I'm going to develop a conscience.");
+
+
+hist=[];
 G.F.push("Fuck's sake, give that equation a break.","You absolute dumbass, even the buttons are embarrassed.","This shit is so confused it needs adult supervision.","Fuck no. Try using the brain you were issued.","You're speedrunning bad decisions, dumbass.","What the fuck is this mathematical nonsense?");
 G.Z.push("Bro is a certified dumbass with premium confidence.","Dumbass behaviour detected. Please reboot.","That's some top-tier nonsense right there.","You really thought that was a good idea? Shit.");
 
@@ -198,7 +201,7 @@ function ui(){
 var expr="",lastExpr="",repCount=0,lastRoast="";
 const pool=k=>cfg.lv>=1?R[k].concat(R[k+"S"]||[]):R[k];
 function pick(k,sub){
- if(!sub&&["normal","simple","many","func","number"].includes(k)&&Math.random()<.7){lastRoast=gen();return lastRoast}
+ if(!sub&&["normal","simple","many","func","number"].includes(k)&&Math.random()<.7){lastRoast=gen();hist.push(lastRoast);if(hist.length>80)hist.shift();return lastRoast}
  let a=pool(k);let fresh=a.filter(x=>!hist.includes(x));if(!fresh.length){hist=[];fresh=a.slice()}
  let t=fresh[Math.floor(Math.random()*fresh.length)]||R[k][0];hist.push(t);if(hist.length>80)hist.shift();lastRoast=t;return sub?t.replace(/\bN\b/g,sub):t}
 function say(t){const r=$("res");r.textContent=t;r.classList.remove("shake");void r.offsetWidth;r.classList.add("shake")}
