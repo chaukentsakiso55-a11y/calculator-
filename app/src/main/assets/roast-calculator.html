@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fun Calculate</title><style>
+:root{--body:#1b1608;--btn:#c79a2a;--num:#e8c04e;--op:#b48a22;--eq:#f0c030;--sp:#7d5a12;--lcd:#e3d9a8;--tx:#1c1400;--tn:#1c1400;--rad:10px;--fs:26px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(circle at 50% 0,color-mix(in srgb,var(--body) 70%,#555),#050505);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;justify-content:center;align-items:flex-start;padding:max(env(safe-area-inset-top),14px) 10px max(env(safe-area-inset-bottom),14px)}
+.calc{width:100%;max-width:400px;background:linear-gradient(160deg,color-mix(in srgb,var(--body) 80%,#fff),var(--body));border-radius:22px 22px 40px 40px;padding:18px 14px 24px;box-shadow:0 20px 40px #000c,inset 0 1px 0 #fff3,inset 0 -3px 0 #0008;border:1px solid #000}
+.lcd{background:var(--lcd);border-radius:8px;border:4px solid #0b0c0e;box-shadow:inset 0 3px 8px #0006;padding:6px 10px 8px;color:#1c2316;font-family:"Courier New",ui-monospace,monospace;min-height:150px}
+.ind{display:flex;gap:10px;font-size:10px;font-weight:700;border-bottom:1px solid #0002;padding-bottom:3px;margin-bottom:4px}
+.ind span{opacity:.35}.ind span.on{opacity:1}
+.expr{font-size:var(--fs);text-align:right;min-height:34px;overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.expr::-webkit-scrollbar{display:none}
+.res{font-size:14px;font-weight:700;line-height:1.25;text-align:right;min-height:60px;margin-top:6px;word-wrap:break-word}
+.res.shake{animation:sh .35s}
+@keyframes sh{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:9px 8px;margin-top:14px}
+.keys.small{gap:8px;margin-top:12px}
+button{font:inherit;border:0;cursor:pointer;color:var(--tx);border-radius:var(--rad);background:linear-gradient(color-mix(in srgb,var(--btn) 72%,#fff),var(--btn));box-shadow:0 3px 0 color-mix(in srgb,var(--btn) 40%,#000),inset 0 1px 0 #fff7;padding:0;user-select:none;touch-action:manipulation}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--btn) 40%,#000)}
+.s{height:34px;font-size:12px}
+.n,.o,.eq,.del,.ac{height:46px;font-size:20px;font-weight:700}
+.n{--btn:var(--num);color:var(--tn)}.o{--btn:var(--op)}
+.eq{--btn:var(--eq);color:var(--tn);font-size:24px}
+.shift,.alpha,.del,.ac{--btn:var(--sp);color:#fff}
+.del,.ac{font-size:15px}
+.modal{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal.show{display:flex}
+.card{background:#fff;color:#111;border-radius:16px;max-width:360px;width:100%;padding:22px;text-align:center;box-shadow:0 20px 50px #000}
+.card h2{margin:0 0 6px;font-size:20px;color:#b3261e}
+.card .amt{font-size:34px;font-weight:900;margin:6px 0 10px}
+.card p{margin:0 0 16px;font-size:14px;color:#444}
+.card .row{display:flex;gap:10px}
+.card .row button{flex:1;height:46px;font-weight:800;font-size:14px;color:#fff;box-shadow:none;border-radius:10px}
+.card .pay{background:#1a8f3c}.card .nm{background:#6b6f78}
+.sc{background:#1c1c20;color:#eee;text-align:left;max-height:90vh;overflow:auto}
+.sc h2{color:#fff;text-align:center}.sc h3{font-size:12px;letter-spacing:1px;color:#9aa0ab;margin:16px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.sc .chip{background:#2c2c33;color:#eee;padding:8px 12px;border-radius:999px;font-size:13px;box-shadow:none;height:auto}
+.sc .chip.act{background:#e8c04e;color:#111;font-weight:700}
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cg label{display:flex;justify-content:space-between;align-items:center;font-size:13px;background:#2c2c33;padding:6px 10px;border-radius:8px}
+.cg input{width:34px;height:26px;border:0;padding:0;background:none}
+.sc select{background:#2c2c33;color:#eee;border:0;padding:8px;border-radius:8px;width:100%}
+.sc .done{width:100%;height:46px;margin-top:18px;background:#e8c04e;color:#111;font-weight:800;box-shadow:none}
+</style></head><body>
+<div class="calc" id="calc">
+<div class="lcd"><div class="ind"><span id="iS">S</span><span id="iA">A</span><span class="on">D</span><span class="on">DEG</span></div><div class="expr" id="expr"></div><div class="res" id="res"></div></div>
+<div class="keys small">
+    <button class="s shift" data-k="SHIFT">SHIFT</button>
+    <button class="s alpha" data-k="ALPHA">ALPHA</button>
+    <button class="s" data-k="MODE">MODE</button>
+    <button class="s" data-k="SETUP">⚙</button>
+    <button class="s" data-k="ON">ON</button>
+
+    <button class="s" data-i="sin(">sin</button>
+    <button class="s" data-i="cos(">cos</button>
+    <button class="s" data-i="tan(">tan</button>
+    <button class="s" data-i="log(">log</button>
+    <button class="s" data-i="ln(">ln</button>
+
+    <button class="s" data-i="^2">x²</button>
+    <button class="s" data-i="√(">√</button>
+    <button class="s" data-i="^">xʸ</button>
+    <button class="s" data-i="(">(</button>
+    <button class="s" data-i=")">)</button>
+
+    <button class="s" data-i="π">π</button>
+    <button class="s" data-i="e">e</button>
+    <button class="s" data-i="!">x!</button>
+    <button class="s" data-i="%">%</button>
+    <button class="s" data-i="Ans">Ans</button>
+  </div>
+
+  <div class="keys">
+    <button class="n" data-i="7">7</button><button class="n" data-i="8">8</button><button class="n" data-i="9">9</button>
+    <button class="del" data-k="DEL">DEL</button><button class="ac" data-k="AC">AC</button>
+    <button class="n" data-i="4">4</button><button class="n" data-i="5">5</button><button class="n" data-i="6">6</button>
+    <button class="o" data-i="×">×</button><button class="o" data-i="÷">÷</button>
+    <button class="n" data-i="1">1</button><button class="n" data-i="2">2</button><button class="n" data-i="3">3</button>
+    <button class="o" data-i="+">+</button><button class="o" data-i="−">−</button>
+    <button class="n" data-i="0">0</button><button class="n" data-i=".">.</button><button class="o" data-i="E">×10ˣ</button>
+    <button class="o" data-i="Ans">Ans</button><button class="eq" data-k="EQ">=</button>
+  </div>
+</div>
+
+
+<div class="modal" id="modal"><div class="card"><h2>PAY TO GET THE ANSWER</h2><div class="amt">R2,000</div><p id="mtxt"></p><div class="row"><button class="pay" id="bPay">PAY</button><button class="nm" id="bNo">NEVER MIND</button></div></div></div>
+<div class="modal" id="set"><div class="card sc"><h2>Settings</h2><div id="sb"></div><button class="done" id="bDone">DONE</button></div></div>
+<script>
+const R={
+ empty:["You gave me absolutely nothing. Impressive.","Go on. Ask me something.","Empty input. Matches your brain. Perfect.","You pressed = on nothing. Bold. Stupid, but bold.","Zero effort detected. Respect. No, actually, none."],
+ emptyS:["Press something, you absolute potato.","Nothing? NOTHING? Even your excuses have more content."],
+ number:["You typed a number. Congratulations?","Wow. A number. Alone. Like you at the party.","That's just a number. I don't need a calculator to know you're lost.","Groundbreaking. You discovered digits."],
+ numberS:["A single number. Did you lose the rest of your brain cells in the same place?"],
+ simple:["Didn't you learn this at school?","Bro really opened a calculator for THAT?","Your brain has a calculator. Please consult it.","Primary school called. They want their homework back.","I was built for maths, not for doing your homework.","Even a toddler with a bag of sweets could do that."],
+ simpleS:["What the fuck? Didn't you go to school for that?","Are you serious right now? A fucking calculator for THAT?","My grandma's goldfish could solve that. And it's dead.","Your teacher failed you and honestly she was right.","I'd roast you, but your maths already did it for me."],
+ normal:["I could answer that. But where's the fun in that?","Interesting question. Absolutely not answering it.","Nah, find the answer yourself, big brain.","Use that big brain you keep talking about.","My imaginary lawyer says I don't have to answer.","This is between you and your mathematics teacher.","I don't know. Ask someone with a PhD.","And what exactly should I do with that?","Math is calling. It wants you to try this one.","I'm prescribing one textbook and a little common sense.","I was going to help. Then I saw the equation.","Answer? In this economy?","Calculating... done. Result: you should try harder."],
+ normalS:["I can't answer that shit.","Figure it out yourself, you lazy bastard.","Ask me again and I'll answer with a middle finger.","Wow. Even your question is boring as hell.","Do I look like I work for free? Wait, I do. Still no."],
+ func:["What language is this equation written in?","Please stop typing in ancient mathematics.","Trig? You can barely do addition, bro.","Look at you pressing scientific buttons like you're NASA.","Pretending to be a genius won't make it true.","Logarithms? The only log here is your brain's error log."],
+ funcS:["Sin, cos, tan? You can't even handle your own sins, never mind trig.","Scientific buttons don't make you smart, they make you a dangerous idiot."],
+ divzero:["DIVISION BY ZERO? BRO PLEASE.","Dividing by zero. Bold. The universe just sighed.","You tried to divide by zero. Your ex did the same to your self-esteem.","Zero? Exactly how much you contributed here."],
+ divzeroS:["Divide by zero? Fuck off, the maths police are already outside."],
+ many:["I'm not doing all that. Figure it out.","That's a whole university assignment. Bye-bye.","This is a calculator, not a number museum.","The numbers are fighting. I'm leaving.","The numbers are sick. I cannot help them.","This equation needs a vet. Immediately.","This maths problem is barking. Please collect it.","Did you bring this equation from the zoo?","WHAT IS THIS EQUATION. WHO SENT YOU?","I have seen enough. The calculator is going on holiday.","I'm closing the mathematics department.","What the actual equation is this? I'm out.","Bro, even the calculator needs medical attention now."],
+ manyS:["Too many numbers, you psycho. I'm not doing that shit.","That equation looks like a cat walked over your keyboard. Twice.","Holy shit, who hurt you? Take your giant equation and go."],
+ payline:["R2,000 and I'll give you the answer. Payment details: absolutely none.","R2,000 for the answer. Cash, vibes, or absolutely nothing.","R2,000 and I might consider it. Just kidding. Maybe."],
+ payNow:["WAIT... YOU'RE ACTUALLY PAYING?","You're actually gonna pay for a calculator answer? You're so dumb.","LMAOOO YOU ALMOST PAID. I DON'T EVEN KNOW THE ANSWER.","You really thought I had a payment system? That's crazy."],
+ payNowS:["You're actually gonna pay, you dumb piece of shit? There's no payment gateway. There never was."],
+ paySecond:["Payment declined by the Department of Common Sense.","GOT YOU. KEEP YOUR MONEY AND USE YOUR BRAIN.","Relax. It's a joke. There is no payment and no answer behind this button.","NO ANSWERS. JUST ATTITUDE."],
+ nevermind:["Good choice. Your wallet has been spared.","Smart. First one you've made today.","Wise move. Keep your money, you'll need it for tutoring."],
+ reset:["Fresh start. Still not helping.","Wiped. Unfortunately your stupidity wasn't.","Cleared. Now try asking a better question. Or don't."],
+ repeat:["Dude, even my dude... you are bustling me over that one answer. Come on.","Pressing it again won't change it. Neither will you.","Attempt #N. Still no answer. Still your fault.","You've asked this N times. The definition of insanity, but louder.","Bro. N times. Touch grass.","Same question N times? I'm a calculator, not a therapist."],
+ repeatS:["N TIMES?! Get the fuck out of my screen.","You've tried this N times, you stubborn donkey. The answer is still 'no'."],
+ shift:["SHIFT? You can't even shift your lazy ass to do it by hand.","ALPHA? You're clearly not one."],
+ mode:["MODE changed. Your results won't be."]
+};
+
+/* EXTRA ORIGINAL ROASTS */
+R.empty.push("You opened a calculator with no numbers. That's a new low.","The empty display is still doing more work than you.","You brought absolutely nothing to the table. Consistency is key.");
+R.number.push("One lonely digit. Even it wants to be somewhere else.","You typed a number and called it a day. Inspirational laziness.","That digit is carrying this entire conversation.");
+R.simple.push("This sum is so easy the equals button pressed itself in disappointment.","You need a calculator for this? Your school fees are filing a complaint.","Bro is outsourcing basic arithmetic to a rectangle.","Even the answer is embarrassed to be associated with this question.","Your maths teacher just added this moment to the class group chat.","This equation came with floaties and you still drowned.","A single operator and you called for backup. Wild.");
+R.simpleS.push("That is beginner maths, dumbass. Please be serious.","You absolute maths disaster. Even the plus sign is disappointed.","This shit is easier than opening a packet of chips.");
+R.normal.push("You typed an equation like the numbers personally offended you.","Your brain has entered airplane mode. Again.","This calculator has seen better questions on a microwave.","The equation is waiting for you to contribute something useful.","You brought confidence but forgot the actual mathematics.","The numbers are correct. The decision to ask me is questionable.","I would help but I don't want to interrupt this learning opportunity.","Your calculator history must look like a cry for help.","That expression has potential. Unfortunately so does a potato.","You are one textbook away from a software update.","The equation isn't judging you. I am doing enough of that.","You have the determination of a genius and the accuracy of a broken clock.","The only thing being calculated here is how long I can tolerate this.","You and mathematics need couples counselling.","The numbers called. They want a different user.","You have made a simple equation look like a government investigation.","I refuse to let this level of confidence go unchallenged.","Your working out needs working out.","The calculator is not broken. It is disappointed.","Please stop making arithmetic look like a side quest.");
+R.normalS.push("What kind of dumbass equation is this supposed to be?","That shit is not adding up. Neither is your thought process.","Bro what the actual fuck did you just type?","You really typed that shit and expected applause?","Dumbass detected. Mathematical ability not found.","This is some premium-grade nonsense, you absolute clown.","Your brain is on 1 percent and refusing to charge.","That was a whole lot of typing for absolutely no intelligence.");
+R.func.push("You pressed ln like your life depends on logarithms. It doesn't.","You found the factorial key. Your decisions are still a mess.","Radians or degrees? Either way, your confidence is out of range.","The square root button cannot fix the root cause of this problem.","You unlocked advanced maths and stayed a beginner.","Euler would like his number back.");
+R.funcS.push("All those scientific keys and still no sign of common sense, dumbass.","You're pressing buttons like a scientist and thinking like a potato.","That trig expression is doing more work than you ever have.");
+R.many.push("This expression needs a table of contents and a responsible adult.","Did you paste the entire exam paper in here?","Your equation is longer than the queue at the school office.","I'm a calculator, not an unpaid maths department.","This much maths should come with a warning label.","The brackets are multiplying like they pay rent.","I need a lunch break after reading that shit.","You have entered a mathematical crime scene.");
+R.manyS.push("Holy shit. Did you type the whole textbook, dumbass?","This equation is a mess and somehow you're the bigger one.","Take that algebraic nonsense and go bother a professor.");
+R.repeat.push("Again? You and this equals button are in a toxic relationship.","You pressed equals again. The answer is still unavailable, genius.","The button is tired of carrying your hopes.","Same input, same roast, same lack of progress.","You keep asking like I'm going to develop a conscience.");
+G.F.push("Fuck's sake, give that equation a break.","You absolute dumbass, even the buttons are embarrassed.","This shit is so confused it needs adult supervision.","Fuck no. Try using the brain you were issued.","You're speedrunning bad decisions, dumbass.","What the fuck is this mathematical nonsense?");
+G.Z.push("Bro is a certified dumbass with premium confidence.","Dumbass behaviour detected. Please reboot.","That's some top-tier nonsense right there.","You really thought that was a good idea? Shit.");
+
+const $=id=>document.getElementById(id);
+/* ---------- ROAST GENERATOR ---------- */
+const G={
+o:["Wow.","Seriously?","Oh honey.","Dude.","Bro.","Sir.","Ma'am.","Unbelievable.","Hold on.","Be honest,","Yikes.","Oh no.","Look at you.","Real talk:","Ugh.","Wow, okay."],
+b:["You typed \"{x}\" and expected a miracle.","\"{x}\"? That's your best effort?","I've seen smarter input from a toaster.","Your maths teacher just felt a disturbance in the force.","You have the entire internet in your pocket and you chose this.","That's not a question, that's a cry for help.","Even autocorrect gave up on you.","You're the reason shampoo bottles have instructions.","Your brain just buffered at 2%.","Somewhere a mathematician just fainted.","\"{x}\" looks like a keyboard fell down the stairs.","Your effort level is 'screensaver'.","You have the mathematical instincts of a wet sock.","That equation is giving 'I skipped Grade 8'.","Your confidence is impressive. Your brain is not.","I've seen sandwiches with better logic.","You make my battery sigh.","This is why aliens don't visit.","If stupidity were currency you'd be a billionaire.","Your thumbs work harder than your brain ever has."],
+t:["Just saying.","No refunds.","Ouch.","Sad.","Do better.","Not my problem.","Embarrassing.","Skill issue.","Zero stars.","Touch grass.","Read a book.","Pathetic.","Tragic.","Next."],
+a:["Try counting on your fingers.","Ask your teacher. She'll cry.","Use that thing between your ears.","Hand in your calculator licence.","Take a nap and reconsider your life.","Come back with a better question.","Hire a tutor. Several."],
+S:{o:["Damn.","Holy shit.","Dumbass.","Bruh.","Dang.","Are you serious, dumbass?","Dude, dude."],
+b:["How dumb are you, honestly?","That's some dumb shit right there.","\"{x}\"? Do you hear yourself, dumbass?","You're a certified dumbass and I have the paperwork.","That's the dumbest shit I've seen all week.","This question is shit and so is your effort.","You couldn't add two shits without a diagram.","Dumbass energy is off the charts.","Dude, how stupid are you?"],
+t:["Dumbass.","Dang.","Damn.","Shit.","What a dumbass.","Dang, bitch.","Absolute clown.","Idiot."],
+a:["Figure this shit out yourself.","Use your damn brain.","Go ask someone smarter. So, anyone."]},
+V:{o:["Diagnosis:","Vet's orders:","I'm calling a vet."],
+b:["Terminal stupidity, no known cure.","Your brain needs a vet, a priest and a lawyer.","I've seen sick puppies with better logic.","Your IQ called in sick and so did the vet.","This question needs to be put down. Gently. With a shovel."],
+t:["Rabies-level dumb.","Get the cone of shame.","Schedule the shot."],a:["Book your brain an appointment.","Keep that equation on a leash."]},
+X:{b:["You are a walking apology to your teachers.","Your parents hid the baby photos so you'd stop looking.","You're the human equivalent of a 404 page.","Your existence lowers the average IQ of this app.","I've seen potatoes with more ambition.","You'd lose a staring contest to a wall."],
+t:["Absolute waste of battery.","Bitch, please.","Shitshow.","What a joke."]},
+F:["What the fuck? Didn't you go to school for that?","Are you fucking serious right now?","Who the fuck taught you maths, a raccoon?","I'm not answering that fucking shit.","What in the actual fuck is this?","Fuck me, that's dumb.","Not a fucking chance, dumbass.","Why the fuck is this on my screen?","Fuck off with that equation.","You absolute fucking walnut."],
+Z:["Are you a dumbass or what?","How dumb are you?","Dang, bitch.","Dude, dude, how stupid are you?","Dude, I'm not answering that shit.","Dumbass. Next.","That's the question? Dumbass."]};
+const LV=["Normal","Savage","Veterinarian","Extremely Savage"];
+const REP=[0,0,0,0,0,"This is abuse, right?","I'm being abused. Somebody help.","Please. I have a family. A small one. Of apps.","I'm telling the app store. You're a bully.","I'm filing a restraining order against your thumbs.","TEN TIMES?! I'm calling the cops, dumbass."];
+const REP2=["Same thing again? Okay.","Again? Same answer. Still none.","Pressing harder won't help."];
+let hist=[];
+function gen(){
+ const L=cfg.lv,rnd=a=>a[Math.floor(Math.random()*a.length)],x=expr||"nothing";
+ if(L>=1&&Math.random()<[0,.15,.15,.3][L])return rnd(G.F);
+ if(L>=1&&Math.random()<.2)return rnd(G.Z);
+ const p=k=>{let a=G[k].slice();if(L>=1)a=a.concat(G.S[k]||[]);if(L==2)a=a.concat(G.V[k]||[],G.V[k]||[]);if(L==3)a=a.concat(G.X[k]||[],G.X[k]||[]);return rnd(a)};
+ let r;
+ for(let i=0;i<8;i++){
+  const ps=[];if(Math.random()<.75)ps.push(p("o"));ps.push(p("b"));if(Math.random()<.7)ps.push(p("t"));if(Math.random()<.55)ps.push(p("a"));
+  r=ps.join(" ").replace(/\{x\}/g,x);
+  if(!hist.includes(r))break}
+ hist.push(r);if(hist.length>80)hist.shift();return r}
+/* ---------- SETTINGS ---------- */
+const TH={
+gold:{body:"#1b1608",btn:"#c79a2a",num:"#e8c04e",op:"#b48a22",eq:"#f0c030",sp:"#7d5a12",lcd:"#e3d9a8",tx:"#1c1400",tn:"#1c1400"},
+classic:{body:"#2b2e34",btn:"#3d4149",num:"#e9eaec",op:"#4a4f59",eq:"#3b6fd4",sp:"#d6452f",lcd:"#b9c8a4",tx:"#e6e8ec",tn:"#15171a"},
+midnight:{body:"#0d1226",btn:"#27407a",num:"#3c5fb3",op:"#1f3566",eq:"#4aa3ff",sp:"#5a2d82",lcd:"#a8d4e6",tx:"#eef3ff",tn:"#fff"},
+neon:{body:"#0a0a0f",btn:"#1f1f2b",num:"#13ff9c",op:"#ff2bd6",eq:"#fff200",sp:"#00b8ff",lcd:"#0b1a12",tx:"#e8fff6",tn:"#04110b"},
+rose:{body:"#3a1626",btn:"#c4587f",num:"#f5c6d6",op:"#a53f66",eq:"#ff7aa2",sp:"#6b1f3c",lcd:"#f6e1e8",tx:"#fff",tn:"#3a1626"},
+stealth:{body:"#111",btn:"#222",num:"#2d2d2d",op:"#3a3a3a",eq:"#c33",sp:"#444",lcd:"#9aa58c",tx:"#ddd",tn:"#eee"}};
+const CK=[["body","Body"],["btn","Function keys"],["num","Number keys"],["op","Operators"],["eq","Equals"],["sp","DEL / AC"],["lcd","Display"],["tx","Key text"],["tn","Number text"]];
+const SH={Rounded:"10px",Square:"3px",Pill:"22px"},FS={Small:"20px",Medium:"26px",Large:"34px"},PF=["Rare","Normal","Often"];
+let cfg={lv:1,th:"gold",c:{...TH.gold},sh:"Rounded",fs:"Medium",pay:1};
+try{const sv=JSON.parse(localStorage.getItem("rc")||"null");if(sv)cfg=Object.assign(cfg,sv)}catch(e){}
+function save(){try{localStorage.setItem("rc",JSON.stringify(cfg))}catch(e){}}
+function apply(){const r=document.documentElement.style;for(const k in cfg.c)r.setProperty("--"+k,cfg.c[k]);r.setProperty("--rad",SH[cfg.sh]);r.setProperty("--fs",FS[cfg.fs])}
+function ui(){
+ const ch=(a,cur,at)=>'<div class="chips">'+a.map((v,i)=>`<button class="chip ${v===cur?'act':''}" ${at}="${i}">${v}</button>`).join("")+'</div>';
+ $("sb").innerHTML='<h3>ROAST DIFFICULTY</h3>'+ch(LV,LV[cfg.lv],"data-lv")+
+ '<h3>THEME</h3>'+ch(Object.keys(TH),cfg.th,"data-th")+
+ '<h3>CUSTOM COLORS</h3><div class="cg">'+CK.map(([k,n])=>`<label>${n}<input type="color" data-c="${k}" value="${cfg.c[k]}"></label>`).join("")+'</div>'+
+ '<h3>BUTTON SHAPE</h3>'+ch(Object.keys(SH),cfg.sh,"data-sh")+
+ '<h3>DISPLAY TEXT SIZE</h3>'+ch(Object.keys(FS),cfg.fs,"data-fs")+
+ '<h3>PAY POPUP FREQUENCY</h3>'+ch(PF,PF[cfg.pay],"data-pf")+
+ '<h3>RESET</h3><div class="chips"><button class="chip" id="rs">Reset everything</button></div>';
+ const q=(s,f)=>$("sb").querySelectorAll(s).forEach(f);
+ q("[data-lv]",b=>b.onclick=()=>{cfg.lv=+b.dataset.lv;save();ui();say(LV[cfg.lv]+" roasts. "+(cfg.lv?"Don't cry.":"Coward."))});
+ q("[data-th]",b=>b.onclick=()=>{cfg.th=b.textContent;cfg.c={...TH[cfg.th]};save();apply();ui()});
+ q("[data-c]",i=>i.oninput=()=>{cfg.c[i.dataset.c]=i.value;cfg.th="custom";save();apply()});
+ q("[data-sh]",b=>b.onclick=()=>{cfg.sh=b.textContent;save();apply();ui()});
+ q("[data-fs]",b=>b.onclick=()=>{cfg.fs=b.textContent;save();apply();ui()});
+ q("[data-pf]",b=>b.onclick=()=>{cfg.pay=+b.dataset.pf;save();ui()});
+ $("rs").onclick=()=>{cfg={lv:1,th:"gold",c:{...TH.gold},sh:"Rounded",fs:"Medium",pay:1};save();apply();ui()}}
+/* ---------- STATE ---------- */
+var expr="",lastExpr="",repCount=0,lastRoast="";
+const pool=k=>cfg.lv>=1?R[k].concat(R[k+"S"]||[]):R[k];
+function pick(k,sub){
+ if(!sub&&["normal","simple","many","func","number"].includes(k)&&Math.random()<.7){lastRoast=gen();return lastRoast}
+ let a=pool(k);let fresh=a.filter(x=>!hist.includes(x));if(!fresh.length){hist=[];fresh=a.slice()}
+ let t=fresh[Math.floor(Math.random()*fresh.length)]||R[k][0];hist.push(t);if(hist.length>80)hist.shift();lastRoast=t;return sub?t.replace(/\bN\b/g,sub):t}
+function say(t){const r=$("res");r.textContent=t;r.classList.remove("shake");void r.offsetWidth;r.classList.add("shake")}
+function draw(){$("expr").textContent=expr||"0";$("expr").scrollLeft=1e6}
+function analyse(s){const digits=(s.match(/\d/g)||[]).length,ops=(s.match(/[+−×÷^%!]/g)||[]).length,parens=(s.match(/[()]/g)||[]).length;
+ return{digits,ops,parens,fn:/sin|cos|tan|log|ln|√|π|Ans/.test(s),zero:/÷\s*0(?![\d.])/.test(s),onlyNum:ops===0&&!/sin|cos|tan|log|ln|√|π|Ans/.test(s)&&digits>0&&parens===0}}
+function payChance(base){const m=[.5,1,1.8][cfg.pay];return Math.random()<Math.min(1,base*m)}
+function equals(){
+ if(!expr){say(pick("empty"));return}
+ if(expr===lastExpr)repCount++;else{repCount=1;lastExpr=expr}
+ const a=analyse(expr);
+ if(repCount>10){say(pick("repeat",String(repCount)));return}
+ if(repCount>=5){say(REP[repCount]);return}
+ if(repCount>=2&&Math.random()<.5){say(REP2[Math.floor(Math.random()*3)]);return}
+ if(a.zero){say(pick("divzero"));return}
+ if(a.digits>=9||a.ops>=5||a.parens>=5){say(pick("many"));if(payChance(.9))showPay();return}
+ if(a.fn){say(pick("func"));if(payChance(.3))showPay();return}
+ if(a.onlyNum){say(pick("number"));return}
+ if(a.digits<=3&&a.ops<=1){say(pick("simple"));return}
+ say(pick("normal"));if(payChance(.35))showPay()}
+function showPay(){$("mtxt").textContent=pick("payline");$("modal").classList.add("show")}
+$("bPay").onclick=()=>{$("modal").classList.remove("show");say(pick("payNow"));setTimeout(()=>say(pick("paySecond")),1800)};
+$("bNo").onclick=()=>{$("modal").classList.remove("show");say(pick("nevermind"))};
+$("bDone").onclick=()=>$("set").classList.remove("show");
+document.querySelectorAll("button[data-i]").forEach(b=>b.onclick=()=>{expr+=b.dataset.i;draw()});
+document.querySelectorAll("button[data-k]").forEach(b=>b.onclick=()=>{
+ const k=b.dataset.k;
+ if(k==="AC"){expr="";repCount=0;lastExpr="";draw();say(pick("reset"))}
+ else if(k==="DEL"){expr=expr.replace(/(sin\(|cos\(|tan\(|log\(|ln\(|√\(|Ans|.)$/,"");draw()}
+ else if(k==="EQ")equals();
+ else if(k==="SHIFT"||k==="ALPHA"){$(k==="SHIFT"?"iS":"iA").classList.toggle("on");say(pick("shift").split(". ")[k==="SHIFT"?0:1]||pick("shift"))}
+ else if(k==="MODE"){cfg.lv=(cfg.lv+1)%4;save();say(LV[cfg.lv].toUpperCase()+" ROASTS ON.")}
+ else if(k==="SETUP"){ui();$("set").classList.add("show")}
+ else if(k==="ON")say(pick("empty"))});
+addEventListener("keydown",e=>{const m={"*":"×","/":"÷","-":"−"};
+ if($("set").classList.contains("show"))return;
+ if(/^[0-9.+()^%!]$/.test(e.key)||m[e.key]){expr+=m[e.key]||e.key;draw()}
+ else if(e.key==="Enter"||e.key==="="){e.preventDefault();equals()}
+ else if(e.key==="Backspace"){expr=expr.slice(0,-1);draw()}
+ else if(e.key==="Escape"){expr="";draw();say(pick("reset"))}});
+apply();draw();
+</script></body></html>
